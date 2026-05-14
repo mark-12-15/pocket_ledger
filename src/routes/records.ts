@@ -83,7 +83,7 @@ router.get('/summary', async (ctx) => {
   }
 
   const [rows] = await pool.query(
-    `SELECT type, SUM(amount) AS total FROM records WHERE user_id = ? ${dateFilter} GROUP BY type`,
+    `SELECT type, SUM(amount) AS total FROM records WHERE user_id = ? AND parse_status IN (0, 4) ${dateFilter} GROUP BY type`,
     params
   ) as any[]
 
@@ -123,10 +123,17 @@ router.put('/:id', async (ctx) => {
     return
   }
 
-  await pool.query(
-    'UPDATE records SET type = ?, amount = ?, category = ?, note = ?, happened_at = ? WHERE id = ?',
-    [type, amount, category || null, note || null, happened_at, id]
-  )
+  const { parse_status } = ctx.request.body as any
+  const updateFields: any[] = [type, amount, category || null, note || null, happened_at]
+  let sql = 'UPDATE records SET type = ?, amount = ?, category = ?, note = ?, happened_at = ?'
+  if (parse_status !== undefined) {
+    sql += ', parse_status = ?'
+    updateFields.push(parse_status)
+  }
+  sql += ' WHERE id = ?'
+  updateFields.push(id)
+
+  await pool.query(sql, updateFields)
 
   ctx.body = { code: 0, message: '更新成功' }
 })
