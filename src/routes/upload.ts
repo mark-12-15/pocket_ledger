@@ -12,6 +12,21 @@ const router = new Router({ prefix: '/upload' })
 
 router.use(authMiddleware)
 
+// 查询解析状态
+router.get('/status/:id', async (ctx) => {
+  const { id } = ctx.params
+  const [rows] = await pool.query(
+    'SELECT id, parse_status, type, amount, category, note, happened_at FROM records WHERE id = ? AND user_id = ?',
+    [id, ctx.state.userId]
+  ) as any[]
+  if ((rows as any[]).length === 0) {
+    ctx.status = 404
+    ctx.body = { code: 404, message: '记录不存在' }
+    return
+  }
+  ctx.body = { code: 0, data: (rows as any[])[0] }
+})
+
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'audio/mpeg', 'audio/wav', 'audio/aac', 'audio/m4a']
 
 // 上传文件（图片/PDF/音频），创建待解析的账单记录

@@ -90,6 +90,21 @@ router.get('/summary', async (ctx) => {
   ctx.body = { code: 0, data: summary }
 })
 
+// 获取单条账单
+router.get('/:id', async (ctx) => {
+  const { id } = ctx.params
+  const [rows] = await pool.query(
+    'SELECT id, type, amount, category, note, happened_at, input_method, parse_status, raw_file_url, created_at FROM records WHERE id = ? AND user_id = ?',
+    [id, ctx.state.userId]
+  ) as any[]
+  if ((rows as any[]).length === 0) {
+    ctx.status = 404
+    ctx.body = { code: 404, message: '账单不存在' }
+    return
+  }
+  ctx.body = { code: 0, data: (rows as any[])[0] }
+})
+
 // 更新账单
 router.put('/:id', async (ctx) => {
   const { id } = ctx.params

@@ -2,8 +2,35 @@ import Router from '@koa/router'
 import axios from 'axios'
 import jwt from 'jsonwebtoken'
 import pool from '../db'
+import { authMiddleware } from '../middleware/auth'
 
 const router = new Router({ prefix: '/auth' })
+
+// 获取当前用户信息
+router.get('/profile', authMiddleware, async (ctx) => {
+  const [rows] = await pool.query(
+    'SELECT id, openid, phone, nickname, created_at FROM users WHERE id = ?',
+    [ctx.state.userId]
+  ) as any[]
+  if ((rows as any[]).length === 0) {
+    ctx.status = 404
+    ctx.body = { code: 404, message: '用户不存在' }
+    return
+  }
+  ctx.body = { code: 0, data: (rows as any[])[0] }
+})
+
+// 修改用户信息
+router.put('/profile', authMiddleware, async (ctx) => {
+  const { nickname } = ctx.request.body as { nickname?: string }
+  if (!nickname) {
+    ctx.status = 400
+    ctx.body = { code: 400, message: 'nickname 不能为空' }
+    return
+  }
+  await pool.query('UPDATE users SET nickname = ? WHERE id = ?', [nickname, ctx.state.userId])
+  ctx.body = { code: 0, message: '更新成功' }
+})
 
 // 微信小程序登录
 router.post('/wx-login', async (ctx) => {
