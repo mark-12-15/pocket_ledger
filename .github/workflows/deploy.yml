@@ -1,0 +1,45 @@
+name: Deploy to CloudBase Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Tencent Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ccr.ccs.tencentyun.com
+          username: ${{ secrets.TENCENT_SECRET_ID }}
+          password: ${{ secrets.TENCENT_SECRET_KEY }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ccr.ccs.tencentyun.com/${{ secrets.TCR_NAMESPACE }}/pocket-ledger-api:${{ github.sha }},ccr.ccs.tencentyun.com/${{ secrets.TCR_NAMESPACE }}/pocket-ledger-api:latest
+
+      - name: Deploy to CloudBase Run
+        env:
+          TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: |
+          pip install tccli -q
+          tccli configure set secretId ${{ secrets.TENCENT_SECRET_ID }}
+          tccli configure set secretKey ${{ secrets.TENCENT_SECRET_KEY }}
+          tccli configure set region ap-shanghai
+          tccli tcb CreateAndDeployCloudBaseProject \
+            --cli-unfold-argument \
+            --EnvId ${{ secrets.CLOUDBASE_ENV_ID }} \
+            --ServiceName pocket-ledger-api \
+            --ImageInfo.ImageType CCR \
+            --ImageInfo.ImageUrl ccr.ccs.tencentyun.com/${{ secrets.TCR_NAMESPACE }}/pocket-ledger-api:${{ github.sha }} \
+            --ImageInfo.ImageVersion ${{ github.sha }}
