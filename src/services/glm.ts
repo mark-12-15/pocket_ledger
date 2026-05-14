@@ -58,9 +58,13 @@ export async function parseWithGLM(fileUrlOrText: string, mimeType: string): Pro
     )
 
     const rawText = data.choices[0].message.content
-    const parsed = JSON.parse(rawText)
+    console.log('[glm] raw response:', rawText.slice(0, 200))
+    // 兼容 GLM 返回 ```json ... ``` 包裹的情况
+    const jsonStr = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim()
+    const parsed = JSON.parse(jsonStr)
     return { ...parsed, rawText }
-  } catch {
+  } catch (err: any) {
+    console.log('[glm] parse error:', err.message)
     return null
   }
 }
