@@ -32,7 +32,7 @@ router.get('/', async (ctx) => {
   const params: any[] = [userId]
 
   if (period === 'month') {
-    const d = date || new Date().toISOString().slice(0, 7)
+    const d = (date || new Date().toISOString()).slice(0, 7)
     dateFilter = "AND DATE_FORMAT(happened_at, '%Y-%m') = ?"
     params.push(d)
   } else if (period === 'quarter') {
@@ -40,7 +40,7 @@ router.get('/', async (ctx) => {
     dateFilter = 'AND YEAR(happened_at) = ? AND QUARTER(happened_at) = ?'
     params.push(year, q)
   } else if (period === 'year') {
-    const year = date || String(new Date().getFullYear())
+    const year = (date || String(new Date().getFullYear())).slice(0, 4)
     dateFilter = 'AND YEAR(happened_at) = ?'
     params.push(year)
   }
@@ -63,7 +63,7 @@ router.get('/summary', async (ctx) => {
   const params: any[] = [userId]
 
   if (period === 'month') {
-    const d = date || new Date().toISOString().slice(0, 7)
+    const d = (date || new Date().toISOString()).slice(0, 7)
     dateFilter = "AND DATE_FORMAT(happened_at, '%Y-%m') = ?"
     params.push(d)
   } else if (period === 'quarter') {
@@ -71,7 +71,7 @@ router.get('/summary', async (ctx) => {
     dateFilter = 'AND YEAR(happened_at) = ? AND QUARTER(happened_at) = ?'
     params.push(year, q)
   } else if (period === 'year') {
-    const year = date || String(new Date().getFullYear())
+    const year = (date || String(new Date().getFullYear())).slice(0, 4)
     dateFilter = 'AND YEAR(happened_at) = ?'
     params.push(year)
   }
