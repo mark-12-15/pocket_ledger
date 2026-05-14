@@ -51,9 +51,14 @@ router.post('/wx-login', async (ctx) => {
   })
 
   if (data.errcode) {
-    ctx.status = 400
-    ctx.body = { code: 400, message: '微信登录失败', detail: data.errmsg }
-    return
+    // 开发环境：模拟器 code 无法通过微信校验，用 code 作为测试 openid
+    if (process.env.NODE_ENV !== 'production') {
+      data.openid = `dev_${code}`
+    } else {
+      ctx.status = 400
+      ctx.body = { code: 400, message: '微信登录失败', detail: data.errmsg }
+      return
+    }
   }
 
   const { openid } = data
