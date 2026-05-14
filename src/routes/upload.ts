@@ -16,7 +16,7 @@ router.use(authMiddleware)
 router.get('/status/:id', async (ctx) => {
   const { id } = ctx.params
   const [rows] = await pool.query(
-    'SELECT id, parse_status, type, amount, category, note, happened_at FROM records WHERE id = ? AND user_id = ?',
+    `SELECT id, parse_status, type, amount, category, note, DATE_FORMAT(happened_at, '%Y-%m-%d') as happened_at FROM records WHERE id = ? AND user_id = ?`,
     [id, ctx.state.userId]
   ) as any[]
   if ((rows as any[]).length === 0) {

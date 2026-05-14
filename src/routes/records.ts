@@ -46,7 +46,7 @@ router.get('/', async (ctx) => {
   }
 
   const [rows] = await pool.query(
-    `SELECT id, type, amount, category, note, happened_at, input_method, parse_status, created_at
+    `SELECT id, type, amount, category, note, DATE_FORMAT(happened_at, '%Y-%m-%d') as happened_at, input_method, parse_status, created_at
      FROM records WHERE user_id = ? ${dateFilter} ORDER BY happened_at DESC, id DESC`,
     params
   )
@@ -94,7 +94,7 @@ router.get('/summary', async (ctx) => {
 router.get('/:id', async (ctx) => {
   const { id } = ctx.params
   const [rows] = await pool.query(
-    'SELECT id, type, amount, category, note, happened_at, input_method, parse_status, raw_file_url, created_at FROM records WHERE id = ? AND user_id = ?',
+    `SELECT id, type, amount, category, note, DATE_FORMAT(happened_at, '%Y-%m-%d') as happened_at, input_method, parse_status, raw_file_url, created_at FROM records WHERE id = ? AND user_id = ?`,
     [id, ctx.state.userId]
   ) as any[]
   if ((rows as any[]).length === 0) {
