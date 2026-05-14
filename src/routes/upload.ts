@@ -27,7 +27,7 @@ router.get('/status/:id', async (ctx) => {
   ctx.body = { code: 0, data: (rows as any[])[0] }
 })
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'audio/mpeg', 'audio/wav', 'audio/aac', 'audio/m4a']
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'audio/mpeg', 'audio/wav', 'audio/aac', 'audio/x-aac', 'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'application/octet-stream']
 
 // 上传文件（图片/PDF/音频），创建待解析的账单记录
 router.post('/', async (ctx) => {
@@ -39,15 +39,22 @@ router.post('/', async (ctx) => {
   }
 
   const mimeType: string = file.mimetype || ''
-  if (!ALLOWED_TYPES.includes(mimeType)) {
+  // 前端传 fileType hint：'image' | 'pdf' | 'audio'
+  const fileTypeHint: string = (ctx.request.body as any)?.fileType || ''
+
+  const isImage = mimeType.startsWith('image/') || fileTypeHint === 'image'
+  const isPdf = mimeType === 'application/pdf' || fileTypeHint === 'pdf'
+  const isAudio = mimeType.startsWith('audio/') || fileTypeHint === 'audio'
+
+  if (!isImage && !isPdf && !isAudio) {
     ctx.status = 400
     ctx.body = { code: 400, message: '不支持的文件类型' }
     return
   }
 
   let inputMethod: number
-  if (mimeType.startsWith('image/')) inputMethod = 2
-  else if (mimeType === 'application/pdf') inputMethod = 3
+  if (isImage) inputMethod = 2
+  else if (isPdf) inputMethod = 3
   else inputMethod = 4
 
   const rawBuffer = fs.readFileSync(file.filepath)
