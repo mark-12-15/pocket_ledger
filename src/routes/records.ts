@@ -125,13 +125,8 @@ router.put('/:id', async (ctx) => {
 
   const { parse_status } = ctx.request.body as any
 
-  // 日期合理性校验：AI 解析的日期超过 90 天前则改用今天
-  const today = new Date()
-  const happenedDate = new Date(happened_at)
-  const diffDays = (today.getTime() - happenedDate.getTime()) / (1000 * 86400)
-  const safeDate = (isNaN(diffDays) || diffDays > 90 || diffDays < -1)
-    ? today.toISOString().slice(0, 10)
-    : happened_at
+  // 日期为空时降级为今天
+  const safeDate = happened_at || new Date().toISOString().slice(0, 10)
 
   const updateFields: any[] = [type, amount, category || null, note || null, safeDate]
   let sql = 'UPDATE records SET type = ?, amount = ?, category = ?, note = ?, happened_at = ?'
