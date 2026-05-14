@@ -50,7 +50,7 @@ router.get('/', async (ctx) => {
 
   const [rows] = await pool.query(
     `SELECT id, type, amount, category, note, DATE_FORMAT(happened_at, '%Y-%m-%d') as happened_at, input_method, parse_status, created_at
-     FROM records WHERE user_id = ? ${dateFilter} ORDER BY happened_at DESC, id DESC`,
+     FROM records WHERE user_id = ? AND parse_status IN (0, 4) ${dateFilter} ORDER BY happened_at DESC, id DESC`,
     params
   )
 
