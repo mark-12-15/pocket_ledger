@@ -112,7 +112,14 @@ router.post('/bind-phone', async (ctx) => {
   const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number }
   await pool.query('UPDATE users SET phone = ? WHERE id = ?', [phone, payload.userId])
 
-  ctx.body = { code: 0, message: '绑定成功' }
+  const newToken = jwt.sign({ userId: payload.userId }, process.env.JWT_SECRET!, { expiresIn: '30d' })
+  const [userRows] = await pool.query('SELECT id, phone, nickname FROM users WHERE id = ?', [payload.userId]) as any[]
+
+  ctx.body = {
+    code: 0,
+    message: '绑定成功',
+    data: { token: newToken, user: (userRows as any[])[0] }
+  }
 })
 
 // Web 端手机号登录
@@ -159,7 +166,7 @@ router.post('/send-sms', async (ctx) => {
 
   // 1分钟内不能重复发送
   const [recent] = await pool.query(
-    'SELECT id FROM sms_codes WHERE phone = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 MINUTE) LIMIT 1',
+    'SELECT id FROM sms_codes WHERE phone = ? AND created_at > DATE_SUB(NOW(), INTERVAL 10 SECOND) LIMIT 1',
     [phone]
   ) as any[]
   if ((recent as any[]).length > 0) {
