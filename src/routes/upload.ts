@@ -114,4 +114,39 @@ router.post('/', async (ctx) => {
   ctx.body = { code: 0, data: { id: recordId, message: '上传成功，正在解析中' } }
 })
 
+// 语音转写文字稿直接解析（前端完成 ASR 后调此接口）
+router.post('/voice-text', async (ctx) => {
+  const { text } = ctx.request.body as any
+  if (!text?.trim()) {
+    ctx.status = 400
+    ctx.body = { code: 400, message: '语音内容为空' }
+    return
+  }
+
+  const userId = ctx.state.userId
+  const today = new Date().toISOString().slice(0, 10)
+
+  const [result] = await pool.query(
+    'INSERT INTO records (user_id, type, amount, happened_at, input_method, parse_status) VALUES (?, 2, 0, CURDATE(), 4, 1)',
+    [userId]
+  ) as any
+  const recordId = result.insertId
+
+  // 异步解析（保持和图片/PDF一致的轮询流程）
+  parseWithGLM(text, 'voice/text', today).then(async (parsed) => {
+    if (parsed) {
+      await pool.query(
+        'UPDATE records SET type=?, amount=?, category=?, note=?, happened_at=?, parse_status=2, raw_text=? WHERE id=?',
+        [parsed.type, parsed.amount, parsed.category, parsed.note, parsed.happened_at, text, recordId]
+      )
+    } else {
+      await pool.query('UPDATE records SET parse_status=3 WHERE id=?', [recordId])
+    }
+  }).catch(async () => {
+    await pool.query('UPDATE records SET parse_status=3 WHERE id=?', [recordId])
+  })
+
+  ctx.body = { code: 0, data: { id: recordId } }
+})
+
 export default router
