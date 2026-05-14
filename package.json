@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@cloudbase/node-sdk": "^3.18.1",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^15.5.0",
     "axios": "^1.16.1",
@@ -22,7 +23,9 @@
     "jsonwebtoken": "^9.0.3",
     "koa": "^3.2.0",
     "koa-body": "^8.0.0",
-    "mysql2": "^3.22.3"
+    "mysql2": "^3.22.3",
+    "pdf-parse": "^1.1.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
@@ -32,6 +35,7 @@
     "@types/koa-cors": "^0.0.6",
     "@types/koa-router": "^7.4.9",
     "@types/node": "^25.7.0",
+    "@types/pdf-parse": "^1.1.5",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
